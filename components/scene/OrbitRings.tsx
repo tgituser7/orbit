@@ -21,7 +21,7 @@ const ORBITS: OrbitSpec[] = [
   { radius: 4.0, tilt: [0.14, 0, -0.08], color: "#ffb36b", speed: 0.24, phase: 4.6, size: 0.11, ticks: 0, precess: 0.025 },
 ];
 
-const RING_WIDTH = 0.22;
+const RING_WIDTH = 0.6; // wide enough for the soft glow around the line
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - THREE.MathUtils.clamp(x, 0, 1), 3);
 
 const ringVertex = /* glsl */ `
@@ -59,15 +59,16 @@ const ringFragment = /* glsl */ `
     float tAA = fwidth(t) * 0.75;
     float a = atan(vPos.y, vPos.x);
 
-    // Crisp orbit line (never thinner than ~1px) plus a soft halo around it
-    float line = aaBand(t, 0.5, max(0.05, tAA * 1.2), tAA);
-    float halo = exp(-pow((t - 0.5) * 5.0, 2.0)) * 0.12;
+    // Crisp orbit line (never thinner than ~1px) plus a tight and a wide glow (baked bloom)
+    float line = aaBand(t, 0.5, max(0.018, tAA * 1.2), tAA);
+    float near = exp(-pow((t - 0.5) * 14.0, 2.0));
+    float wide = exp(-pow((t - 0.5) * 5.0, 2.0));
 
     // Optional engraved ticks on the outer half
     float ticks = 0.0;
     if (uTicks > 0.0) {
       float an = (a + 3.14159265) / TAU;
-      float inBand = smoothstep(0.62 - tAA, 0.62 + tAA, t) * (1.0 - smoothstep(0.85 - tAA, 0.85 + tAA, t));
+      float inBand = smoothstep(0.535 - tAA, 0.535 + tAA, t) * (1.0 - smoothstep(0.575 - tAA, 0.575 + tAA, t));
       ticks = aaTicks(an * uTicks, 0.06) * inBand;
     }
 
@@ -79,7 +80,7 @@ const ringFragment = /* glsl */ `
     float sweep = uIntro * (TAU + 0.4);
     float reveal = 1.0 - smoothstep(sweep - 0.4, sweep, d);
 
-    float glow = line * (0.32 + arc * 2.6) + halo * (0.5 + arc * 2.0) + ticks * (0.22 + arc * 0.8);
+    float glow = line * (0.35 + arc * 2.8) + near * (0.08 + arc * 0.9) + wide * arc * 0.35 + ticks * (0.22 + arc * 0.8);
     vec3 col = uColor * glow + vec3(1.0) * line * arc * 0.7;
     gl_FragColor = vec4(col * reveal, clamp(glow, 0.0, 1.0) * reveal);
   }
@@ -126,7 +127,7 @@ function Orbit({ spec, index }: { spec: OrbitSpec; index: number }) {
   useFrame(({ clock, camera }, delta) => {
     const t = clock.getElapsedTime();
     const intro = easeOutCubic((t - 0.4 - index * 0.35) / 2.4);
-    const angle = t * spec.speed + spec.phase;
+    const angle = (t * spec.speed + spec.phase) % (Math.PI * 2);
 
     if (mat.current) {
       mat.current.uniforms.uAngle.value = angle;
@@ -169,7 +170,7 @@ function Orbit({ spec, index }: { spec: OrbitSpec; index: number }) {
               <meshBasicMaterial color={new THREE.Color(spec.color).lerp(new THREE.Color("#ffffff"), 0.55)} toneMapped={false} />
             </mesh>
             <mesh ref={glow}>
-              <planeGeometry args={[spec.size * 14, spec.size * 14]} />
+              <planeGeometry args={[spec.size * 18, spec.size * 18]} />
               <shaderMaterial
                 uniforms={glowUniforms}
                 vertexShader={glowVertex}

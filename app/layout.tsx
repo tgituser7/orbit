@@ -6,8 +6,9 @@ const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", 
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", weight: ["400", "500"] });
 
 export const metadata: Metadata = {
-  title: "Orbit — Everything moves in orbit",
-  description: "A real-time universe of rings, gravity and light.",
+  title: "Orbit — Smart investing, on autopilot",
+  description:
+    "Diversified, automatically rebalanced portfolios of stocks, bonds and ETFs built around your goals. Capital at risk.",
 };
 
 export const viewport: Viewport = {

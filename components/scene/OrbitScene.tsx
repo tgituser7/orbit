@@ -2,9 +2,8 @@
 
 import { useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
-import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
+import Backdrop from "./Backdrop";
 import Core from "./Core";
 import OrbitRings from "./OrbitRings";
 
@@ -18,6 +17,8 @@ function System() {
   const target = useRef(new THREE.Vector3());
 
   useFrame(({ clock, pointer }, delta) => {
+    // Clamp delta so a dropped frame or a background tab never makes the motion jump.
+    const dt = Math.min(delta, 1 / 30);
     const p = easeOutExpo(Math.min(clock.getElapsedTime() / INTRO_SECONDS, 1));
 
     // Pull the camera back on narrow screens so the whole system fits.
@@ -27,17 +28,17 @@ function System() {
     const camZ = THREE.MathUtils.lerp(36, dist, p);
     const camY = THREE.MathUtils.lerp(10, 2.6, p);
     target.current.set(pointer.x * 0.7, camY + pointer.y * 0.5, camZ);
-    camera.position.lerp(target.current, 1 - Math.pow(0.001, delta));
+    camera.position.lerp(target.current, 1 - Math.pow(0.001, dt));
     camera.lookAt(0, 0, 0);
 
     if (system.current) {
       // Wide screens: slide the system right of the headline. Portrait: lift it above the copy.
       const offsetX = aspect > 1.4 ? 2.6 : aspect > 1 ? 1.4 : 0;
       const offsetY = aspect < 1 ? 1.8 : 0;
-      system.current.position.x = THREE.MathUtils.damp(system.current.position.x, offsetX, 2, delta);
-      system.current.position.y = THREE.MathUtils.damp(system.current.position.y, offsetY, 2, delta);
-      system.current.rotation.x = THREE.MathUtils.damp(system.current.rotation.x, 0.3 - pointer.y * 0.16, 3, delta);
-      system.current.rotation.z = THREE.MathUtils.damp(system.current.rotation.z, -0.1 + pointer.x * 0.08, 3, delta);
+      system.current.position.x = THREE.MathUtils.damp(system.current.position.x, offsetX, 2, dt);
+      system.current.position.y = THREE.MathUtils.damp(system.current.position.y, offsetY, 2, dt);
+      system.current.rotation.x = THREE.MathUtils.damp(system.current.rotation.x, 0.3 - pointer.y * 0.16, 3, dt);
+      system.current.rotation.z = THREE.MathUtils.damp(system.current.rotation.z, -0.1 + pointer.x * 0.08, 3, dt);
     }
   });
 
@@ -49,23 +50,20 @@ function System() {
   );
 }
 
+/**
+ * Deliberately no post-processing: glow is baked into the shaders (halos, ring glow),
+ * and the starfield/vignette are a static screen-space backdrop. This avoids the
+ * MSAA/half-float/bloom pipeline that flickers on many laptop GPUs.
+ */
 export default function OrbitScene() {
   return (
     <Canvas
-      dpr={[1, 2]}
-      camera={{ position: [0, 10, 36], fov: 42, near: 0.1, far: 300 }}
-      gl={{ antialias: false, powerPreference: "high-performance" }}
+      dpr={[1, 1.5]}
+      camera={{ position: [0, 10, 36], fov: 42, near: 0.1, far: 100 }}
+      gl={{ antialias: true, alpha: false }}
     >
-      <color attach="background" args={["#03040a"]} />
-
-      <Stars radius={100} depth={50} count={2500} factor={3} saturation={0.3} fade speed={0} />
-
+      <Backdrop />
       <System />
-
-      <EffectComposer multisampling={4}>
-        <Bloom mipmapBlur intensity={1.1} luminanceThreshold={0.5} luminanceSmoothing={0.25} radius={0.7} />
-        <Vignette eskil={false} offset={0.2} darkness={0.8} />
-      </EffectComposer>
     </Canvas>
   );
 }

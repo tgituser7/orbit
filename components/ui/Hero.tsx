@@ -1,11 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Telemetry from "./Telemetry";
+// import Telemetry from "./Telemetry"; // used by the hidden live portfolio panel
 
 const OrbitScene = dynamic(() => import("../scene/OrbitScene"), {
   ssr: false,
-  loading: () => <div className="scene-loading">Calibrating orbit…</div>,
+  loading: () => <div className="scene-loading">Loading markets…</div>,
 });
 
 function LogoMark() {
@@ -36,52 +36,59 @@ export default function Hero() {
           <span>ORBIT</span>
         </a>
         <nav className="nav__links">
-          <a href="#">Systems</a>
-          <a href="#">Missions</a>
-          <a href="#">Observatory</a>
-          <a href="#">Journal</a>
+          <a href="#">Stocks &amp; ETFs</a>
+          <a href="#">Retirement</a>
+          <a href="#">Wealth Plans</a>
+          <a href="#">Research</a>
+          <a href="#">Fees</a>
         </nav>
         <a href="#" className="btn btn--ghost nav__cta">
-          Launch
+          Open account
         </a>
       </header>
 
       <div className="hero__content">
         <p className="eyebrow">
-          <span className="pulse" /> Live system · real-time orbital mechanics
+          <span className="pulse" /> Markets open · Smart investing, on autopilot
         </p>
         <h1>
-          Everything moves
+          Your money,
           <br />
-          <em>in orbit.</em>
+          <em>always in motion.</em>
         </h1>
         <p className="hero__lede">
-          A real-time universe of rings, gravity and light. Orbit maps the paths that hold
-          everything together — and lets you travel them.
+          Diversified portfolios built around your goals. Stocks, bonds and ETFs are balanced
+          automatically, so your money keeps compounding while you get on with your life.
         </p>
         <div className="hero__actions">
           <a href="#" className="btn btn--primary">
-            Enter the orbit
+            Start investing
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </a>
           <a href="#" className="btn btn--ghost">
-            Watch the film
+            See how it works
           </a>
         </div>
+        <p className="hero__disclaimer">
+          Capital at risk. The value of investments can go down as well as up.
+        </p>
       </div>
 
+      {/* Live portfolio panel: hidden for now. Uncomment to restore.
       <aside className="hero__hud">
         <p className="hud__title">
-          <span>SYS-01</span> Telemetry
+          <span>Live</span> Growth portfolio
         </p>
         <Telemetry />
       </aside>
+      */}
 
       <div className="hero__coords" aria-hidden="true">
-        <span>RA 14h 29m 43s</span>
-        <span>DEC −62° 40′ 46″</span>
+        <span>S&amp;P 500 ▲ 0.84%</span>
+        <span>NASDAQ ▲ 1.12%</span>
+        <span>GOLD ▼ 0.21%</span>
       </div>
 
       <div className="hero__scroll" aria-hidden="true">
